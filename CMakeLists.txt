@@ -17,6 +17,8 @@ qt_add_qml_module(backend
     SOURCES
         src/backend/Player.h
         src/backend/Player.cpp
+        src/backend/PlaylistModel.h
+        src/backend/PlaylistModel.cpp
 )
 target_include_directories(backend PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/backend
@@ -35,6 +37,7 @@ qt_add_qml_module(quartz
     VERSION 1.0
     QML_FILES
         qml/Main.qml
+        qml/PlaylistPanel.qml
 )
 target_link_libraries(quartz PRIVATE
     Qt6::Gui

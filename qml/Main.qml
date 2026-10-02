@@ -1,16 +1,21 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 import Quartz.Backend
 
 ApplicationWindow {
     visible: true
-    width: 420
-    height: 360
+    width: 900
+    height: 600
     title: "Quartz"
 
     Player {
         id: player
-        source: "file:///home/GReiX19/Music/addiction.mp3"
+    }
+
+    PlaylistModel {
+        id: playlist
+        Component.onCompleted: scanMusicFolder()
     }
 
     function fmt(ms){
@@ -19,44 +24,93 @@ ApplicationWindow {
         return m + ":" + String(s % 60).padStart(2, "0")
     }
 
-    Column{
-        anchors.centerIn: parent
-        width: parent.width - 60
-        spacing: 16
+    RowLayout {
+        anchors.fill: parent
+        spacing: 0
 
-        Slider {
-            id: seekSlider
-            width: parent.width
-            from: 0
-            to: player.duration
-            value: player.position
-            onMoved: player.seek(value)
-        }
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.margins: 24
+            spacing: 16
 
-        Label {
-            text: fmt(player.position) + " / " + fmt(player.duration)
-            anchors.horizontalCenter: parent.horizontalCenter
-        }
-
-        Button {
-            text: player.playing ? "Pause" : "Play"
-            anchors.horizontalCenter: parent.horizontalCenter
-            onClicked: player.toggle()
-        }
-
-        Row {
-            spacing: 10
-            anchors.horizontalCenter: parent.horizontalCenter
-            
-            Label {
-                text: "Vol"
-                anchors.verticalCenter: parent.verticalCenter
+            Rectangle {
+                Layout.alignment: Qt.AlignHCenter
+                Layout.preferredWidth: 260
+                Layout.preferredHeight: 260
+                radius: 12
+                color: "#33000000"
             }
+
             Slider {
+                Layout.fillWidth: true
                 from: 0
-                to: 1
-                value: player.volume
-                onMoved: player.volume = value
+                to: player.duration
+                value: player.position
+                onMoved: player.seek(value)
+            }
+
+            Label {
+                Layout.alignment: Qt.AlignHCenter
+                text: fmt(player.position) + " / " + fmt(player.duration)
+            }
+
+            Button {
+                Layout.alignment: Qt.AlignHCenter
+                text: player.playing ? "Pause" : "Play"
+                onClicked: player.toggle()
+            }
+
+            RowLayout {
+                Layout.alignment: Qt.AlignHCenter
+                spacing: 12
+
+                Button {
+                    id: playlistButton
+                    text: "List"
+                    checkable: true
+                    checked: true
+                }
+                Button {
+                    text: "Search"
+                    onClicked: {
+                        playlistButton.checked = true
+                        playlistPanel.focusSearch()
+                    }
+                }
+                Label {
+                    text: "Vol"
+                }
+                Slider {
+                    from: 0
+                    to: 1
+                    value: player.volume
+                    onMoved: player.volume = value
+                }
+            }
+
+            Item {
+                Layout.fillHeight: true
+            }
+        }
+
+        Rectangle {
+            Layout.fillHeight: true
+            Layout.preferredWidth: 1
+            visible: playlistButton.checked
+            color: "#33000000"
+        }
+
+        PlaylistPanel {
+            id: playlistPanel
+            Layout.fillHeight: true
+            Layout.preferredWidth: 320
+            visible: playlistButton.checked
+            model: playlist
+            currentSource: player.source
+            onTrackActivated: (url) => {
+                player.source = url
+                player.play()
             }
         }
     }
