@@ -16,6 +16,9 @@ int PlaylistModel::count() const {
 int PlaylistModel::currentIndex() const {
     return m_currentIndex;
 }
+PlaylistModel::RepeatMode PlaylistModel::repeatMode() const {
+    return m_repeatMode;
+}
 
 int PlaylistModel::rowCount(const QModelIndex& _parent) const {
     return _parent.isValid() ? 0 : static_cast<int>(m_tracks.size());
@@ -42,6 +45,14 @@ QHash<int, QByteArray> PlaylistModel::roleNames() const {
         { TitleRole, "title" },
         { TrackUrlRole, "trackUrl" },
     };
+}
+
+void PlaylistModel::setRepeatMode(RepeatMode _mode) {
+    if (m_repeatMode == _mode)
+        return;
+
+    m_repeatMode = _mode;
+    emit repeatModeChanged();
 }
 
 void PlaylistModel::scanMusicFolder() {
@@ -82,17 +93,44 @@ void PlaylistModel::playAt(int _row) {
 }
 
 bool PlaylistModel::next() {
-    if (m_currentIndex + 1 >= count())
+    if (count() == 0)
         return false;
 
-    playAt(m_currentIndex + 1);
+    int row = m_currentIndex + 1;
+    if (row >= count()) {
+        if (m_repeatMode != RepeatPlaylist)
+            return false;
+        row = 0;
+    }
+
+    playAt(row);
     return true;
 }
 
 bool PlaylistModel::previous() {
-    if (m_currentIndex <= 0)
+    if (count() == 0)
         return false;
 
-    playAt(m_currentIndex - 1);
+    int row = m_currentIndex - 1;
+    if (row < 0) {
+        if (m_repeatMode != RepeatPlaylist)
+            return false;
+        row = count() - 1;
+    }
+
+    playAt(row);
     return true;
+}
+
+void PlaylistModel::cycleRepeatMode() {
+    setRepeatMode(static_cast<RepeatMode>((m_repeatMode + 1) % 3));
+}
+
+void PlaylistModel::trackFinished() {
+    if (count() == 0 or m_currentIndex < 0)
+        return;
+    if (m_repeatMode == RepeatTrack)
+        playAt(m_currentIndex);
+    else
+        next();
 }

@@ -11,7 +11,7 @@ ApplicationWindow {
 
     Player {
         id: player
-        onFinished: playlist.next()
+        onFinished: playlist.trackFinished()
     }
 
     PlaylistModel {
@@ -76,6 +76,12 @@ ApplicationWindow {
                 Button {
                     text: "Next"
                     onClicked: playlist.next()
+                }
+                Button {
+                    text: playlist.repeatMode === PlaylistModel.RepeatOff ? "Repeat: Off"
+                        : playlist.repeatMode === PlaylistModel.RepeatPlaylist ? "Repeat: All"
+                        : "Repeat: One"
+                    onClicked: playlist.cycleRepeatMode()
                 }
             }
 

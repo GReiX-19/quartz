@@ -7,14 +7,14 @@
 #include <QtQml/qqmlregistration.h>
 
 class Player : public QObject {
-    Q_OBJECT
-        QML_ELEMENT
+    Q_OBJECT;
+    QML_ELEMENT;
 
-        Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
-        Q_PROPERTY(bool playing READ playing NOTIFY playingChanged)
-        Q_PROPERTY(qint64 position READ position NOTIFY positionChanged)
-        Q_PROPERTY(qint64 duration READ duration NOTIFY durationChanged)
-        Q_PROPERTY(float volume READ volume WRITE setVolume NOTIFY volumeChanged)
+    Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged);
+    Q_PROPERTY(bool playing READ playing NOTIFY playingChanged);
+    Q_PROPERTY(qint64 position READ position NOTIFY positionChanged);
+    Q_PROPERTY(qint64 duration READ duration NOTIFY durationChanged);
+    Q_PROPERTY(float volume READ volume WRITE setVolume NOTIFY volumeChanged);
 
 public:
     explicit Player(QObject* _parent = nullptr);
