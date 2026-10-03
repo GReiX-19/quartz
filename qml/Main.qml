@@ -20,6 +20,8 @@ ApplicationWindow {
         onPlayRequested: (trackUrl) => {
             player.source = trackUrl
             player.play()
+
+            trackTitle.text = currentTitle()
         }
     }
 
@@ -38,6 +40,11 @@ ApplicationWindow {
             Layout.fillHeight: true
             Layout.margins: 24
             spacing: 16
+
+            Label {
+                id: trackTitle
+                Layout.alignment: Qt.AlignHCenter
+            }
 
             Rectangle {
                 Layout.alignment: Qt.AlignHCenter
@@ -64,6 +71,12 @@ ApplicationWindow {
                 Layout.alignment: Qt.AlignHCenter
                 spacing: 8
 
+                Button {
+                    text: "Shuffle"
+                    checkable: true
+                    checked: playlist.shuffle
+                    onToggled: playlist.shuffle = checked
+                }
                 Button {
                     text: "Prev"
                     onClicked: playlist.previous()
