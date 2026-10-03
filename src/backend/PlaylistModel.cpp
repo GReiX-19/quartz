@@ -4,6 +4,8 @@
 #include <QFileInfo>
 #include <QStandardPaths>
 #include <algorithm>
+#include <numeric>
+#include <random>
 
 PlaylistModel::PlaylistModel(QObject* _parent)
     : QAbstractListModel(_parent) {
@@ -18,6 +20,9 @@ int PlaylistModel::currentIndex() const {
 }
 PlaylistModel::RepeatMode PlaylistModel::repeatMode() const {
     return m_repeatMode;
+}
+bool PlaylistModel::shuffle() const {
+    return m_shuffle;
 }
 
 int PlaylistModel::rowCount(const QModelIndex& _parent) const {
@@ -55,6 +60,17 @@ void PlaylistModel::setRepeatMode(RepeatMode _mode) {
     emit repeatModeChanged();
 }
 
+void PlaylistModel::setShuffle(bool _enabled) {
+    if (m_shuffle == _enabled)
+        return;
+
+    m_shuffle = _enabled;
+    if (m_shuffle)
+        rebuildOrder(m_currentIndex);
+
+    emit shuffleChanged();
+}
+
 void PlaylistModel::scanMusicFolder() {
     const QString musicDir = QStandardPaths::writableLocation(QStandardPaths::MusicLocation);
 
@@ -74,6 +90,10 @@ void PlaylistModel::scanMusicFolder() {
     beginResetModel();
     m_tracks = std::move(found);
     m_currentIndex = -1;
+    m_order.clear();
+    m_orderPos = -1;
+    if (m_shuffle)
+        rebuildOrder(-1);
     endResetModel();
 
     emit countChanged();
@@ -84,26 +104,41 @@ void PlaylistModel::playAt(int _row) {
     if (_row < 0 or _row >= count())
         return;
 
-    if (m_currentIndex != _row) {
-        m_currentIndex = _row;
-        emit currentIndexChanged();
-    }
+    if (m_shuffle)
+        rebuildOrder(_row);
 
-    emit playRequested(m_tracks[_row].url);
+    setCurrent(_row);
 }
 
 bool PlaylistModel::next() {
     if (count() == 0)
         return false;
 
-    int row = m_currentIndex + 1;
-    if (row >= count()) {
-        if (m_repeatMode != RepeatPlaylist)
-            return false;
-        row = 0;
+    int target;
+    if (!m_shuffle) {
+        target = m_currentIndex + 1;
+        if (target >= count()) {
+            if (m_repeatMode != RepeatPlaylist)
+                return false;
+            target = 0;
+        }
+    }
+    else {
+        int pos = m_orderPos + 1;
+        if (pos >= count()) {
+            if (m_repeatMode != RepeatPlaylist)
+                return false;
+            rebuildOrder(-1);
+
+            if (count() > 1 and m_order.first() == m_currentIndex)
+                std::swap(m_order.first(), m_order.last());
+            pos = 0;
+        }
+        m_orderPos = pos;
+        target = m_order[pos];
     }
 
-    playAt(row);
+    setCurrent(target);
     return true;
 }
 
@@ -111,14 +146,27 @@ bool PlaylistModel::previous() {
     if (count() == 0)
         return false;
 
-    int row = m_currentIndex - 1;
-    if (row < 0) {
-        if (m_repeatMode != RepeatPlaylist)
-            return false;
-        row = count() - 1;
+    int target;
+    if (!m_shuffle) {
+        target = m_currentIndex - 1;
+        if (target < 0) {
+            if (m_repeatMode != RepeatPlaylist)
+                return false;
+            target = count() - 1;
+        }
+    }
+    else {
+        int pos = m_orderPos - 1;
+        if (pos < 0) {
+            if (m_repeatMode != RepeatPlaylist)
+                return false;
+            pos = count() - 1;
+        }
+        m_orderPos = pos;
+        target = m_order[pos];
     }
 
-    playAt(row);
+    setCurrent(target);
     return true;
 }
 
@@ -130,7 +178,40 @@ void PlaylistModel::trackFinished() {
     if (count() == 0 or m_currentIndex < 0)
         return;
     if (m_repeatMode == RepeatTrack)
-        playAt(m_currentIndex);
+        setCurrent(m_currentIndex);
     else
         next();
+}
+
+QString PlaylistModel::currentTitle() const {
+    if (m_currentIndex >= count() or m_currentIndex < 0)
+        return {};
+
+    return m_tracks[m_currentIndex].title;
+}
+
+void PlaylistModel::setCurrent(int _row) {
+    if (m_currentIndex != _row) {
+        m_currentIndex = _row;
+        emit currentIndexChanged();
+    }
+
+    emit playRequested(m_tracks[_row].url);
+}
+
+void PlaylistModel::rebuildOrder(int _first) {
+    m_order.resize(count());
+    std::ranges::iota(m_order, 0);
+
+    std::mt19937 rng{ std::random_device{} () };
+
+    if (_first >= 0 and _first < count()) {
+        std::swap(m_order[0], m_order[_first]);
+        std::ranges::shuffle(m_order, rng);
+        m_orderPos = 0;
+    }
+    else {
+        std::ranges::shuffle(m_order, rng);
+        m_orderPos = -1;
+    }
 }
