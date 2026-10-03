@@ -11,11 +11,16 @@ ApplicationWindow {
 
     Player {
         id: player
+        onFinished: playlist.next()
     }
 
     PlaylistModel {
         id: playlist
         Component.onCompleted: scanMusicFolder()
+        onPlayRequested: (trackUrl) => {
+            player.source = trackUrl
+            player.play()
+        }
     }
 
     function fmt(ms){
@@ -55,10 +60,23 @@ ApplicationWindow {
                 text: fmt(player.position) + " / " + fmt(player.duration)
             }
 
-            Button {
+            RowLayout {
                 Layout.alignment: Qt.AlignHCenter
-                text: player.playing ? "Pause" : "Play"
-                onClicked: player.toggle()
+                spacing: 8
+
+                Button {
+                    text: "Prev"
+                    onClicked: playlist.previous()
+                }
+                Button {
+                    Layout.alignment: Qt.AlignHCenter
+                    text: player.playing ? "Pause" : "Play"
+                    onClicked: player.toggle()
+                }
+                Button {
+                    text: "Next"
+                    onClicked: playlist.next()
+                }
             }
 
             RowLayout {
@@ -88,10 +106,6 @@ ApplicationWindow {
                     onMoved: player.volume = value
                 }
             }
-
-            Item {
-                Layout.fillHeight: true
-            }
         }
 
         Rectangle {
@@ -107,11 +121,8 @@ ApplicationWindow {
             Layout.preferredWidth: 320
             visible: playlistButton.checked
             model: playlist
-            currentSource: player.source
-            onTrackActivated: (url) => {
-                player.source = url
-                player.play()
-            }
+            currentIndex: playlist.currentIndex
+            onTrackActivated: (row) => playlist.playAt(row)
         }
     }
 }

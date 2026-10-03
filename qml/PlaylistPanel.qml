@@ -6,8 +6,8 @@ Item {
     id: root
 
     property alias model: list.model
-    property url currentSource
-    signal trackActivated(url trackUrl)
+    property int currentIndex: -1
+    signal trackActivated(int row)
 
     function focusSearch() {
         searchField.forceActiveFocus()
@@ -32,13 +32,13 @@ Item {
             ScrollBar.vertical: ScrollBar {}
 
             delegate: ItemDelegate {
+                required property int index
                 required property string title
-                required property url trackUrl
 
                 width: ListView.view.width
                 text: title
-                highlighted: root.currentSource.toString() === trackUrl.toString()
-                onClicked: root.trackActivated(trackUrl)
+                highlighted: index === root.currentIndex
+                onClicked: root.trackActivated(index)
             }
         }
     }
