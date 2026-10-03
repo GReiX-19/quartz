@@ -13,6 +13,9 @@ PlaylistModel::PlaylistModel(QObject* _parent)
 int PlaylistModel::count() const {
     return static_cast<int>(m_tracks.size());
 }
+int PlaylistModel::currentIndex() const {
+    return m_currentIndex;
+}
 
 int PlaylistModel::rowCount(const QModelIndex& _parent) const {
     return _parent.isValid() ? 0 : static_cast<int>(m_tracks.size());
@@ -55,13 +58,41 @@ void PlaylistModel::scanMusicFolder() {
         found.append({ QFileInfo(path).completeBaseName(), QUrl::fromLocalFile(path) });
     }
 
-    // std::ranges::sort(found, [](const Track& a, Track& b) {
-    //     return a.title.localeAwareCompare(b.title) < 0;
-    //     });
+    std::ranges::reverse(found);
 
     beginResetModel();
     m_tracks = std::move(found);
+    m_currentIndex = -1;
     endResetModel();
 
     emit countChanged();
+    emit currentIndexChanged();
+}
+
+void PlaylistModel::playAt(int _row) {
+    if (_row < 0 or _row >= count())
+        return;
+
+    if (m_currentIndex != _row) {
+        m_currentIndex = _row;
+        emit currentIndexChanged();
+    }
+
+    emit playRequested(m_tracks[_row].url);
+}
+
+bool PlaylistModel::next() {
+    if (m_currentIndex + 1 >= count())
+        return false;
+
+    playAt(m_currentIndex + 1);
+    return true;
+}
+
+bool PlaylistModel::previous() {
+    if (m_currentIndex <= 0)
+        return false;
+
+    playAt(m_currentIndex - 1);
+    return true;
 }

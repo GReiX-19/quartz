@@ -13,6 +13,11 @@ Player::Player(QObject* _parent)
     connect(&m_player, &QMediaPlayer::positionChanged, this, &Player::positionChanged);
     connect(&m_player, &QMediaPlayer::durationChanged, this, &Player::durationChanged);
     connect(&m_output, &QAudioOutput::volumeChanged, this, &Player::volumeChanged);
+    connect(&m_player, &QMediaPlayer::mediaStatusChanged, this,
+        [this](QMediaPlayer::MediaStatus status) {
+            if (status == QMediaPlayer::EndOfMedia)
+                emit finished();
+        });
 
     connect(&m_player, &QMediaPlayer::errorOccurred, this,
         [](QMediaPlayer::Error error, const QString& message) {

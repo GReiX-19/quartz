@@ -40,6 +40,7 @@ signals:
     void positionChanged();
     void durationChanged();
     void volumeChanged();
+    void finished();
 
 private:
     QAudioOutput m_output;
