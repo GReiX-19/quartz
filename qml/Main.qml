@@ -25,6 +25,12 @@ ApplicationWindow {
         }
     }
 
+    TrackFilterModel {
+        id: filteredPlaylist
+        sourceModel: playlist
+        filterText: playlistPanel.searchText
+    }
+
     function fmt(ms){
         const s = Math.floor(ms / 1000)
         const m = Math.floor(s / 60)
@@ -139,7 +145,7 @@ ApplicationWindow {
             Layout.fillHeight: true
             Layout.preferredWidth: 320
             visible: playlistButton.checked
-            model: playlist
+            model: filteredPlaylist
             currentIndex: playlist.currentIndex
             onTrackActivated: (row) => playlist.playAt(row)
         }

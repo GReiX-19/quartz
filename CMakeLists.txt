@@ -15,10 +15,12 @@ qt_add_qml_module(backend
     URI ${PROJECT_NAME}.Backend
     VERSION 1.0
     SOURCES
-        src/backend/Player.h
+        src/backend/Player.hpp
         src/backend/Player.cpp
-        src/backend/PlaylistModel.h
+        src/backend/PlaylistModel.hpp
         src/backend/PlaylistModel.cpp
+        src/backend/TrackFilterModel.hpp
+        src/backend/TrackFilterModel.cpp
 )
 target_include_directories(backend PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/backend

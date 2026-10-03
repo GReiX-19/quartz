@@ -6,6 +6,7 @@ Item {
     id: root
 
     property alias model: list.model
+    property alias searchText: searchField.text
     property int currentIndex: -1
     signal trackActivated(int row)
 
@@ -22,6 +23,14 @@ Item {
             id: searchField
             Layout.fillWidth: true
             placeholderText: "Search"
+            Keys.onEscapePressed: text = ""
+        }
+
+        Label {
+            Layout.alignment: Qt.AlignHCenter
+            visible: list.count === 0 && searchField.text.length > 0
+            text: "No tracks found"
+            opacity: 0.6
         }
 
         ListView {
@@ -32,13 +41,13 @@ Item {
             ScrollBar.vertical: ScrollBar {}
 
             delegate: ItemDelegate {
-                required property int index
+                required property int sourceRow
                 required property string title
 
                 width: ListView.view.width
                 text: title
-                highlighted: index === root.currentIndex
-                onClicked: root.trackActivated(index)
+                highlighted: sourceRow === root.currentIndex
+                onClicked: root.trackActivated(sourceRow)
             }
         }
     }
