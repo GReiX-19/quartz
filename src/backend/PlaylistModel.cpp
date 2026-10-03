@@ -1,4 +1,4 @@
-#include "PlaylistModel.h"
+#include "PlaylistModel.hpp"
 
 #include <QDirIterator>
 #include <QFileInfo>
@@ -40,6 +40,8 @@ QVariant PlaylistModel::data(const QModelIndex& _index, int _role) const {
         return track.title;
     case TrackUrlRole:
         return track.url;
+    case SourceRowRole:
+        return _index.row();
     default:
         return {};
     }
@@ -49,6 +51,7 @@ QHash<int, QByteArray> PlaylistModel::roleNames() const {
     return {
         { TitleRole, "title" },
         { TrackUrlRole, "trackUrl" },
+        { SourceRowRole, "sourceRow" },
     };
 }
 

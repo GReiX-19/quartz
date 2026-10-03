@@ -17,6 +17,7 @@ public:
     enum Roles {
         TitleRole = Qt::UserRole + 1,
         TrackUrlRole,
+        SourceRowRole,
     };
 
     enum RepeatMode {
