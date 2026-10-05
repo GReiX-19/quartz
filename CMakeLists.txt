@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Qml QuickControls2 Multimedia)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Qml QuickControls2 Multimedia DBus)
 
 qt_standard_project_setup()
 
@@ -29,6 +29,7 @@ target_link_libraries(backend PUBLIC
     Qt6::Core
     Qt6::Qml
     Qt6::Multimedia
+    Qt6::DBus
 )
 
 qt_add_executable(quartz

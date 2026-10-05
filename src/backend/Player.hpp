@@ -15,6 +15,13 @@ class Player : public QObject {
     Q_PROPERTY(qint64 position READ position NOTIFY positionChanged);
     Q_PROPERTY(qint64 duration READ duration NOTIFY durationChanged);
     Q_PROPERTY(float volume READ volume WRITE setVolume NOTIFY volumeChanged);
+    Q_PROPERTY(PlaybackState playbackState READ playbackState NOTIFY playbackStateChanged);
+    enum PlaybackState {
+        Stopped,
+        Paused,
+        Playing,
+    };
+    Q_ENUM(PlaybackState);
 
 public:
     explicit Player(QObject* _parent = nullptr);
@@ -25,6 +32,7 @@ public:
     bool playing() const;
     qint64 position() const;
     qint64 duration() const;
+    PlaybackState playbackState() const;
 
     float volume() const;
     void setVolume(float _v);
@@ -33,6 +41,7 @@ public:
     Q_INVOKABLE void pause();
     Q_INVOKABLE void toggle();
     Q_INVOKABLE void seek(qint64 _ms);
+    Q_INVOKABLE void stop();
 
 signals:
     void sourceChanged();
@@ -41,6 +50,7 @@ signals:
     void durationChanged();
     void volumeChanged();
     void finished();
+    void playbackStateChanged();
 
 private:
     QAudioOutput m_output;

@@ -50,6 +50,8 @@ ApplicationWindow {
             Label {
                 id: trackTitle
                 Layout.alignment: Qt.AlignHCenter
+                text: "Nothing plays."
+                opacity: text === "Nothing plays." ? 0.6 : 1.0
             }
 
             Rectangle {
