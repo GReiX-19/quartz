@@ -25,6 +25,11 @@ ApplicationWindow {
         }
     }
 
+    MprisService {
+        engine: player
+        tracks: playlist
+    }
+
     TrackFilterModel {
         id: filteredPlaylist
         sourceModel: playlist

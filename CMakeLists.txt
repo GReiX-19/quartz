@@ -21,6 +21,8 @@ qt_add_qml_module(backend
         src/backend/PlaylistModel.cpp
         src/backend/TrackFilterModel.hpp
         src/backend/TrackFilterModel.cpp
+        src/backend/MprisService.hpp
+        src/backend/MprisService.cpp
 )
 target_include_directories(backend PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/backend
