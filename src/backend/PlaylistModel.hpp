@@ -14,7 +14,8 @@ class PlaylistModel : public QAbstractListModel {
     Q_PROPERTY(bool shuffle READ shuffle WRITE setShuffle NOTIFY shuffleChanged);
     Q_PROPERTY(QString currentTitle READ currentTitle NOTIFY currentIndexChanged)
 
-        enum Roles {
+public:
+    enum Roles {
         TitleRole = Qt::UserRole + 1,
         TrackUrlRole,
         SourceRowRole,
@@ -25,8 +26,6 @@ class PlaylistModel : public QAbstractListModel {
         RepeatPlaylist,
         RepeatTrack,
     };
-
-public:
     Q_ENUM(RepeatMode);
 
     explicit PlaylistModel(QObject* _parent = nullptr);

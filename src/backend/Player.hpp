@@ -16,6 +16,8 @@ class Player : public QObject {
     Q_PROPERTY(qint64 duration READ duration NOTIFY durationChanged);
     Q_PROPERTY(float volume READ volume WRITE setVolume NOTIFY volumeChanged);
     Q_PROPERTY(PlaybackState playbackState READ playbackState NOTIFY playbackStateChanged);
+
+public:
     enum PlaybackState {
         Stopped,
         Paused,
@@ -23,7 +25,6 @@ class Player : public QObject {
     };
     Q_ENUM(PlaybackState);
 
-public:
     explicit Player(QObject* _parent = nullptr);
 
     QUrl source() const;
