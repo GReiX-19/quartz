@@ -20,8 +20,6 @@ ApplicationWindow {
         onPlayRequested: (trackUrl) => {
             player.source = trackUrl
             player.play()
-
-            trackTitle.text = currentTitle()
         }
     }
 
@@ -55,8 +53,9 @@ ApplicationWindow {
             Label {
                 id: trackTitle
                 Layout.alignment: Qt.AlignHCenter
-                text: "Nothing plays."
-                opacity: text === "Nothing plays." ? 0.6 : 1.0
+                readonly property bool hasTrack: playlist.currentIndex >= 0
+                text: hasTrack ? playlist.currentTitle : "Nothing plays."
+                opacity: hasTrack ? 1.0 : 0.6
             }
 
             Rectangle {
