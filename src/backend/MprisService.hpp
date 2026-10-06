@@ -28,6 +28,11 @@ public: //methods
     PlaylistModel* playlist() const { return m_playlist; }
     void setPlaylist(PlaylistModel* _playlist);
 
+    bool shuffle() const;
+    void setShuffle(bool _enabled);
+    QString loopStatus() const;
+    void setLoopStatus(const QString& _status);
+
     QString playbackStatus() const;
     QVariantMap metadata() const;
     qlonglong positionUs() const;
@@ -108,6 +113,8 @@ class MprisPlayerAdaptor : public QDBusAbstractAdaptor {
     Q_PROPERTY(bool CanPause READ canPause);
     Q_PROPERTY(bool CanSeek READ canSeek);
     Q_PROPERTY(bool CanControl READ canControl);
+    Q_PROPERTY(QString LoopStatus READ loopStatus WRITE setLoopStatus);
+    Q_PROPERTY(bool Shuffle READ shuffle WRITE setShuffle);
 
 public: //methods
     explicit MprisPlayerAdaptor(MprisService* _service)
@@ -126,6 +133,10 @@ public: //methods
     bool canPause() const { return true; }
     bool canSeek() const { return m_service->player() != nullptr; }
     bool canControl() const { return true; }
+    bool shuffle() const { return m_service->shuffle(); }
+    void setShuffle(bool _on) { m_service->setShuffle(_on); }
+    QString loopStatus() const { return m_service->loopStatus(); }
+    void setLoopStatus(const QString& s) { m_service->setLoopStatus(s); }
 
 public slots:
     void Next() { m_service->next(); }

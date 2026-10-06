@@ -45,6 +45,9 @@ void MprisService::setPlayer(Player* _player) {
         connect(m_player, &Player::volumeChanged, this, [this] {
             notifyPlayerProperties({ { QStringLiteral("Volume"), volume() } });
             });
+        connect(m_player, &Player::seeked, this, [this](qint64 _ms) {
+            emit m_playerAdaptor->Seeked(_ms * 1000);
+            });
     }
 
     emit playerChanged();
@@ -67,9 +70,44 @@ void MprisService::setPlaylist(PlaylistModel* _playlist) {
                                     { QStringLiteral("CanGoPrevious"), has },
                                     { QStringLiteral("CanPlay"), has } });
             });
+        connect(m_playlist, &PlaylistModel::shuffleChanged, this, [this] {
+            notifyPlayerProperties({ { QStringLiteral("Shuffle"), shuffle() } });
+            });
+        connect(m_playlist, &PlaylistModel::repeatModeChanged, this, [this] {
+            notifyPlayerProperties({ { QStringLiteral("LoopStatus"), loopStatus() } });
+            });
     }
 
     emit playlistChanged();
+}
+
+bool MprisService::shuffle() const {
+    return m_playlist and m_playlist->shuffle();
+}
+void MprisService::setShuffle(bool _enabled) {
+    if (m_playlist)
+        m_playlist->setShuffle(_enabled);
+}
+QString MprisService::loopStatus() const {
+    if (!m_playlist)
+        return QStringLiteral("None");
+
+    switch (m_playlist->repeatMode()) {
+    case PlaylistModel::RepeatPlaylist: return QStringLiteral("Playlist");
+    case PlaylistModel::RepeatTrack: return QStringLiteral("Track");
+    default: return QStringLiteral("None");
+    }
+}
+void MprisService::setLoopStatus(const QString& _status) {
+    if (!m_playlist)
+        return;
+
+    if (_status == QLatin1String("None"))
+        m_playlist->setRepeatMode(PlaylistModel::RepeatOff);
+    else if (_status == QLatin1String("Playlist"))
+        m_playlist->setRepeatMode(PlaylistModel::RepeatPlaylist);
+    else if (_status == QLatin1String("Track"))
+        m_playlist->setRepeatMode(PlaylistModel::RepeatTrack);
 }
 
 QString MprisService::playbackStatus() const {
@@ -155,15 +193,12 @@ void MprisService::seekBy(qlonglong offsetUs) {
     const qint64 target = qMax<qint64>(0, m_player->position() + offsetUs / 1000);
     m_player->seek(target);
 
-    emit m_playerAdaptor->Seeked(target * 1000);
 }
 void MprisService::setPositionUs(const QString& trackPath, qlonglong us) {
     if (!m_player or trackPath != currentTrackPath() or us < 0)
         return;
 
     m_player->seek(us / 1000);
-
-    emit m_playerAdaptor->Seeked(us);
 }
 
 QString MprisService::currentTrackPath() const {
