@@ -52,6 +52,7 @@ signals:
     void volumeChanged();
     void finished();
     void playbackStateChanged();
+    void seeked(qint64 _positionMs);
 
 private:
     QAudioOutput m_output;

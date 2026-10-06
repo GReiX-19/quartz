@@ -74,6 +74,7 @@ void Player::toggle() {
 }
 void Player::seek(qint64 _ms) {
     m_player.setPosition(_ms);
+    emit seeked(_ms);
 }
 void Player::stop() {
     m_player.stop();
