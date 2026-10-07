@@ -8,31 +8,20 @@ ApplicationWindow {
     visible: true
     title: "Quartz"
 
-    readonly property int playerMinWidth: 480
     readonly property int playlistWidth: 319
     readonly property int dividerWidth: 1
 
     property bool playlistOpen: false
+    property bool volumeOpen: false
 
-    width: playerMinWidth
+    width: 900
     height: 600
-    minimumWidth: playerMinWidth
+    minimumWidth: 480
     minimumHeight: 520
 
-    onPlaylistOpenChanged: {
-        const delta = playlistWidth + dividerWidth
-        const windowed = visibility === Window.windowed
-
-        if (playlistOpen){
-            minimumWidth = playerMinWidth + delta
-            if (windowed)
-                width += delta
-        }
-        else {
-            if (windowed)
-                width = Math.max(playerMinWidth, width - delta)
-            minimumWidth = playerMinWidth
-        }
+    onVolumeOpenChanged: {
+        if (volumeOpen)
+            volumeSlider.forceActiveFocus()
     }
 
     Player {
@@ -71,13 +60,6 @@ ApplicationWindow {
         playlistPanel.focusSearch()
     }
 
-    function toggleVolumePopup() {
-        if (volumePopup.opened)
-            volumePopup.close()
-        else
-            volumePopup.open()
-    }
-
     Shortcut { sequence: "Space"; onActivated: player.toggle() }
     Shortcut { sequence: "N"; onActivated: playlist.next() }
     Shortcut { sequence: "P"; onActivated: playlist.previous() }
@@ -85,7 +67,7 @@ ApplicationWindow {
     Shortcut { sequence: "H"; onActivated: playlist.shuffle = !playlist.shuffle }
     Shortcut { sequence: "L"; onActivated: root.playlistOpen = !root.playlistOpen }
     Shortcut { sequence: "S"; onActivated: root.showSearch() }
-    Shortcut { sequence: "V"; onActivated: root.toggleVolumePopup() }
+    Shortcut { sequence: "V"; onActivated: root.volumeOpen = !root.volumeOpen }
 
     RowLayout {
         anchors.fill: parent
@@ -108,7 +90,6 @@ ApplicationWindow {
                     spacing: 10
 
                     Button {
-                        id: playlistButton
                         implicitWidth: 40
                         implicitHeight: 40
                         text: "List"
@@ -127,38 +108,21 @@ ApplicationWindow {
                         implicitWidth: 40
                         implicitHeight: 40
                         text: "Volume"
-                        highlighted: volumePopup.opened
-                        onClicked: root.toggleVolumePopup()
-
-                        Popup {
-                            id: volumePopup
-                            x: -width - 8
-                            y: (volButton.height - height) / 2
-                            padding: 12
-                            focus: true
-                            closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
-
-                            contentItem: ColumnLayout {
-                                spacing: 8
-
-                                Slider {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    Layout.preferredHeight: 130
-                                    orientation: Qt.Vertical
-                                    from: 0
-                                    to: 1
-                                    stepSize: 0.05
-                                    focus: true
-                                    value: player.volume
-                                    onMoved: player.volume = value
-                                }
-                                Label {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: Math.round(player.volume * 100) + "%"
-                                    opacity: 0.7
-                                }
-                            }
-                        }
+                        checked: root.volumeOpen
+                        onClicked: root.volumeOpen = checked
+                    }
+                    Slider {
+                        id: volumeSlider
+                        Layout.alignment: Qt.AlignHCenter
+                        Layout.preferredHeight: 130
+                        visible: root.volumeOpen
+                        orientation: Qt.Vertical
+                        from: 0
+                        to: 1
+                        stepSize: 0.05
+                        value: player.volume
+                        onMoved: player.volume = value
+                        Keys.onEscapePressed: root.volumeOpen = false
                     }
                 }
 
@@ -195,6 +159,7 @@ ApplicationWindow {
                     }
 
                     Slider {
+                        id: durationSlider
                         Layout.alignment: Qt.AlignHCenter
                         Layout.preferredWidth: 300
                         from: 0
@@ -253,16 +218,16 @@ ApplicationWindow {
 
         Rectangle {
             Layout.fillHeight: true
-            Layout.preferredWidth: 1
-            visible: playlistButton.checked
+            Layout.preferredWidth: root.dividerWidth
+            visible: root.playlistOpen
             color: "#33000000"
         }
 
         PlaylistPanel {
             id: playlistPanel
             Layout.fillHeight: true
-            Layout.preferredWidth: 320
-            visible: playlistButton.checked
+            Layout.preferredWidth: root.playlistWidth
+            visible: root.playlistOpen
             model: filteredPlaylist
             currentIndex: playlist.currentIndex
             onTrackActivated: (row) => playlist.playAt(row)
