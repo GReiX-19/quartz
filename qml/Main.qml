@@ -4,10 +4,36 @@ import QtQuick.Layouts
 import Quartz.Backend
 
 ApplicationWindow {
+    id: root
     visible: true
-    width: 900
-    height: 600
     title: "Quartz"
+
+    readonly property int playerMinWidth: 480
+    readonly property int playlistWidth: 319
+    readonly property int dividerWidth: 1
+
+    property bool playlistOpen: false
+
+    width: playerMinWidth
+    height: 600
+    minimumWidth: playerMinWidth
+    minimumHeight: 520
+
+    onPlaylistOpenChanged: {
+        const delta = playlistWidth + dividerWidth
+        const windowed = visibility === Window.windowed
+
+        if (playlistOpen){
+            minimumWidth = playerMinWidth + delta
+            if (windowed)
+                width += delta
+        }
+        else {
+            if (windowed)
+                width = Math.max(playerMinWidth, width - delta)
+            minimumWidth = playerMinWidth
+        }
+    }
 
     Player {
         id: player
@@ -40,6 +66,27 @@ ApplicationWindow {
         return m + ":" + String(s % 60).padStart(2, "0")
     }
 
+    function showSearch() {
+        playlistOpen = true
+        playlistPanel.focusSearch()
+    }
+
+    function toggleVolumePopup() {
+        if (volumePopup.opened)
+            volumePopup.close()
+        else
+            volumePopup.open()
+    }
+
+    Shortcut { sequence: "Space"; onActivated: player.toggle() }
+    Shortcut { sequence: "N"; onActivated: playlist.next() }
+    Shortcut { sequence: "P"; onActivated: playlist.previous() }
+    Shortcut { sequence: "R"; onActivated: playlist.cycleRepeatMode() }
+    Shortcut { sequence: "H"; onActivated: playlist.shuffle = !playlist.shuffle }
+    Shortcut { sequence: "L"; onActivated: root.playlistOpen = !root.playlistOpen }
+    Shortcut { sequence: "S"; onActivated: root.showSearch() }
+    Shortcut { sequence: "V"; onActivated: root.toggleVolumePopup() }
+
     RowLayout {
         anchors.fill: parent
         spacing: 0
@@ -61,38 +108,57 @@ ApplicationWindow {
                     spacing: 10
 
                     Button {
+                        id: playlistButton
                         implicitWidth: 40
                         implicitHeight: 40
-                        id: playlistButton
                         text: "List"
                         checkable: true
-                        checked: false
+                        checked: root.playlistOpen
+                        onToggled: root.playlistOpen = checked
                     }
                     Button {
                         implicitWidth: 40
                         implicitHeight: 40
                         text: "Search"
-                        onClicked: {
-                            playlistButton.checked = true
-                            playlistPanel.focusSearch()
-                        }
+                        onClicked: root.showSearch()
                     }
                     Button {
+                        id: volButton
                         implicitWidth: 40
                         implicitHeight: 40
-                        id: volButton
                         text: "Volume"
-                        checkable: true
-                        checked: false
-                    }
-                    Slider {
-                        Layout.preferredHeight: 130
-                        visible: volButton.checked
-                        from: 0
-                        to: 1
-                        value: player.volume
-                        onMoved: player.volume = value
-                        orientation: Qt.Vertical
+                        highlighted: volumePopup.opened
+                        onClicked: root.toggleVolumePopup()
+
+                        Popup {
+                            id: volumePopup
+                            x: -width - 8
+                            y: (volButton.height - height) / 2
+                            padding: 12
+                            focus: true
+                            closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
+
+                            contentItem: ColumnLayout {
+                                spacing: 8
+
+                                Slider {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    Layout.preferredHeight: 130
+                                    orientation: Qt.Vertical
+                                    from: 0
+                                    to: 1
+                                    stepSize: 0.05
+                                    focus: true
+                                    value: player.volume
+                                    onMoved: player.volume = value
+                                }
+                                Label {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: Math.round(player.volume * 100) + "%"
+                                    opacity: 0.7
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -103,9 +169,21 @@ ApplicationWindow {
                     Label {
                         id: trackTitle
                         Layout.alignment: Qt.AlignHCenter
+                        Layout.preferredWidth: 300
+                        Layout.maximumWidth: 300
                         readonly property bool hasTrack: playlist.currentIndex >= 0
+
                         text: hasTrack ? playlist.currentTitle : "Nothing plays."
                         opacity: hasTrack ? 1.0 : 0.6
+                        font.pixelSize: 15
+                        horizontalAlignment: Text.AlignHCenter
+                        elide: Text.ElideRight
+                        maximumLineCount: 1
+
+                        HoverHandler { id: titleHover }
+                        ToolTip.visible: titleHover.hovered && trackTitle.truncated
+                        ToolTip.text: trackTitle.text
+                        ToolTip.delay: 500
                     }
 
                     Rectangle {
