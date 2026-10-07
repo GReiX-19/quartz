@@ -68,6 +68,7 @@ ApplicationWindow {
     Shortcut { sequence: "L"; onActivated: root.playlistOpen = !root.playlistOpen }
     Shortcut { sequence: "S"; onActivated: root.showSearch() }
     Shortcut { sequence: "V"; onActivated: root.volumeOpen = !root.volumeOpen }
+    Shortcut { sequence: "D"; onActivated: durationSlider.focus = !durationSlider.focus }
 
     RowLayout {
         anchors.fill: parent
@@ -164,6 +165,7 @@ ApplicationWindow {
                         Layout.preferredWidth: 300
                         from: 0
                         to: player.duration
+                        stepSize: 5000
                         value: player.position
                         onMoved: player.seek(value)
                     }
