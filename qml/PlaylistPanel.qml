@@ -23,7 +23,12 @@ Item {
             id: searchField
             Layout.fillWidth: true
             placeholderText: "Search"
-            Keys.onEscapePressed: text = ""
+            Keys.onEscapePressed: {
+                if (text.length > 0) 
+                    text = ""
+                else
+                    focus = false
+            }
         }
 
         Label {
