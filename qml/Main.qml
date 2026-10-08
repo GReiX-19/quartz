@@ -11,7 +11,7 @@ ApplicationWindow {
     readonly property int playlistWidth: 319
     readonly property int dividerWidth: 1
 
-    property bool playlistOpen: false
+    property bool playlistOpen: true
     property bool volumeOpen: false
 
     width: 900
@@ -19,9 +19,17 @@ ApplicationWindow {
     minimumWidth: 480
     minimumHeight: 520
 
+    onWidthChanged: {
+        if (width <= 735) {
+            playlistOpen = false
+        }
+    }
+
     onVolumeOpenChanged: {
         if (volumeOpen)
             volumeSlider.forceActiveFocus()
+        else 
+            volumeSlider.focus = false
     }
 
     Player {
@@ -56,8 +64,22 @@ ApplicationWindow {
     }
 
     function showSearch() {
-        playlistOpen = true
+        if (width <= 735) {
+            playlistOpen = false
+            return
+        }
+
+        playlistOpen = !playlistOpen
         playlistPanel.focusSearch()
+    }
+
+    function showPlaylist() {
+        if (width <= 735) { 
+            playlistOpen = false
+            return
+        }
+
+        playlistOpen = !playlistOpen
     }
 
     Shortcut { sequence: "Space"; onActivated: player.toggle() }
@@ -65,7 +87,7 @@ ApplicationWindow {
     Shortcut { sequence: "P"; onActivated: playlist.previous() }
     Shortcut { sequence: "R"; onActivated: playlist.cycleRepeatMode() }
     Shortcut { sequence: "H"; onActivated: playlist.shuffle = !playlist.shuffle }
-    Shortcut { sequence: "L"; onActivated: root.playlistOpen = !root.playlistOpen }
+    Shortcut { sequence: "L"; onActivated: root.showPlaylist() }
     Shortcut { sequence: "S"; onActivated: root.showSearch() }
     Shortcut { sequence: "V"; onActivated: root.volumeOpen = !root.volumeOpen }
     Shortcut { sequence: "D"; onActivated: durationSlider.focus = !durationSlider.focus }
@@ -94,9 +116,7 @@ ApplicationWindow {
                         implicitWidth: 40
                         implicitHeight: 40
                         text: "List"
-                        checkable: true
-                        checked: root.playlistOpen
-                        onToggled: root.playlistOpen = checked
+                        onClicked: root.showPlaylist()
                     }
                     Button {
                         implicitWidth: 40
@@ -109,8 +129,9 @@ ApplicationWindow {
                         implicitWidth: 40
                         implicitHeight: 40
                         text: "Volume"
+                        checkable: true
                         checked: root.volumeOpen
-                        onClicked: root.volumeOpen = checked
+                        onToggled: root.volumeOpen = checked
                     }
                     Slider {
                         id: volumeSlider
