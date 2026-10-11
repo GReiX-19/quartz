@@ -21,6 +21,10 @@ ApplicationWindow {
 
     property bool playlistOpen: true
     property bool volumeOpen: false
+    property bool animationsEnabled: false
+
+    readonly property real playlistProgress: playlistContainer.width > 0 ?
+        Math.max(0, Math.min(1, (width - playlistContainer.x) / playlistContainer.width)) : 0
 
     width: 900
     height: 600
@@ -35,6 +39,13 @@ ApplicationWindow {
     Component.onCompleted: {
         if (compact)
             playlistOpen = false
+
+        animationsEnabled = true
+    }
+
+    onPlaylistOpenChanged: {
+        if (playlistOpen && compact)
+            Qt.callLater(() => playlistPanel.forceActiveFocus())
     }
 
     onVolumeOpenChanged: {
@@ -78,7 +89,7 @@ ApplicationWindow {
     function showSearch() {
         playlistOpen = !playlistOpen
         if (playlistOpen)
-            playlistPanel.focusSearch()
+            Qt.callLater(() => playlistPanel.focusSearch())
     }
 
     function showPlaylist() {
@@ -97,7 +108,8 @@ ApplicationWindow {
 
     RowLayout {
         anchors.fill: parent
-        anchors.rightMargin: root.playlistOpen && !root.compact ? playlistContainer.width : 0
+        anchors.rightMargin: root.compact ? 0 :
+            playlistContainer.width * root.playlistProgress
         spacing: 0
 
         ColumnLayout {
@@ -246,7 +258,8 @@ ApplicationWindow {
 
     MouseArea {
         anchors.fill: parent
-        visible: root.playlistOpen && root.compact
+        visible: root.compact && root.playlistProgress > 0
+        opacity: root.playlistProgress
         onClicked: root.playlistOpen = false
 
         Rectangle {
@@ -259,9 +272,44 @@ ApplicationWindow {
         id: playlistContainer
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-        anchors.right: parent.right
         width: root.playlistPanelWidth + root.dividerWidth
-        visible: root.playlistOpen
+        x: root.width
+        visible: root.playlistOpen || x < root.width
+
+        states: [
+            State {
+                name: "shown"
+                when: root.playlistOpen
+                
+                PropertyChanges {
+                    target: playlistContainer
+                    x: root.width - playlistContainer.width
+                }
+            }
+        ]
+
+        transitions: [
+            Transition {
+                to: "shown"
+                enabled: root.animationsEnabled
+
+                NumberAnimation {
+                    property: "x"
+                    duration: 250
+                    easing.type: Easing.OutCubic
+                }
+            },
+            Transition {
+                from: "shown"
+                enabled: root.animationsEnabled
+
+                NumberAnimation {
+                    property: "x"
+                    duration: 200
+                    easing.type: Easing.InCubic
+                }
+            }
+        ]
 
         Rectangle {
             anchors.fill: parent
@@ -286,6 +334,10 @@ ApplicationWindow {
             model: filteredPlaylist
             currentIndex: playlist.currentIndex
             onTrackActivated: (row) => playlist.playAt(row)
+            onCloseRequested: {
+                if (root.compact)
+                    root.playlistOpen = false
+            }
         }
     }
 }

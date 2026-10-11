@@ -9,6 +9,12 @@ Item {
     property alias searchText: searchField.text
     property int currentIndex: -1
     signal trackActivated(int row)
+    signal closeRequested()
+
+    Keys.onEscapePressed: {
+        root.forceActiveFocus()
+        root.closeRequested()
+    }
 
     function focusSearch() {
         searchField.forceActiveFocus()
@@ -23,11 +29,11 @@ Item {
             id: searchField
             Layout.fillWidth: true
             placeholderText: "Search"
-            Keys.onEscapePressed: {
+            Keys.onEscapePressed: (event) => {
                 if (text.length > 0) 
                     text = ""
                 else
-                    focus = false
+                    event.accepted = false
             }
         }
 
