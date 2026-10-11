@@ -8,8 +8,16 @@ ApplicationWindow {
     visible: true
     title: "Quartz"
 
-    readonly property int playlistWidth: 319
     readonly property int dividerWidth: 1
+
+    readonly property int compactWidth: 735
+    readonly property bool compact: width <= compactWidth
+
+    readonly property int playlistMinWidth: 260
+    readonly property int playlistMaxWidth: 360
+    readonly property int playlistPanelWidth: compact ? 
+        Math.min(playlistMaxWidth, width - 48) : 
+        Math.max(playlistMinWidth, Math.min(playlistMinWidth, Math.round(width * 0.35)))
 
     property bool playlistOpen: true
     property bool volumeOpen: false
@@ -19,10 +27,14 @@ ApplicationWindow {
     minimumWidth: 480
     minimumHeight: 520
 
-    onWidthChanged: {
-        if (width <= 735) {
+    onCompactChanged: {
+        if (compact)
             playlistOpen = false
-        }
+    }
+
+    Component.onCompleted: {
+        if (compact)
+            playlistOpen = false
     }
 
     onVolumeOpenChanged: {
@@ -64,21 +76,12 @@ ApplicationWindow {
     }
 
     function showSearch() {
-        if (width <= 735) {
-            playlistOpen = false
-            return
-        }
-
         playlistOpen = !playlistOpen
-        playlistPanel.focusSearch()
+        if (playlistOpen)
+            playlistPanel.focusSearch()
     }
 
     function showPlaylist() {
-        if (width <= 735) { 
-            playlistOpen = false
-            return
-        }
-
         playlistOpen = !playlistOpen
     }
 
@@ -94,6 +97,7 @@ ApplicationWindow {
 
     RowLayout {
         anchors.fill: parent
+        anchors.rightMargin: root.playlistOpen && !root.compact ? playlistContainer.width : 0
         spacing: 0
 
         ColumnLayout {
@@ -238,19 +242,47 @@ ApplicationWindow {
                 }
             }
         }
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        visible: root.playlistOpen && root.compact
+        onClicked: root.playlistOpen = false
 
         Rectangle {
-            Layout.fillHeight: true
-            Layout.preferredWidth: root.dividerWidth
-            visible: root.playlistOpen
+            anchors.fill: parent
+            color: "#55000000"
+        }
+    }
+
+    Item {
+        id: playlistContainer
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+        width: root.playlistPanelWidth + root.dividerWidth
+        visible: root.playlistOpen
+
+        Rectangle {
+            anchors.fill: parent
+            color: root.palette.window
+        }
+
+        Rectangle {
+            id: divider
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            width: root.dividerWidth
             color: "#33000000"
         }
 
         PlaylistPanel {
             id: playlistPanel
-            Layout.fillHeight: true
-            Layout.preferredWidth: root.playlistWidth
-            visible: root.playlistOpen
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            anchors.left: divider.right
+            anchors.right: parent.right
             model: filteredPlaylist
             currentIndex: playlist.currentIndex
             onTrackActivated: (row) => playlist.playAt(row)
