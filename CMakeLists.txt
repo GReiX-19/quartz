@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.21)
-project(Quartz VERSION 0.1 LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.24)
+project(Quartz VERSION 0.3 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -7,6 +7,21 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Qml QuickControls2 Multimedia DBus)
+
+include(FetchContent)
+
+set(BUILD_TESTING   OFF CACHE BOOL "" FORCE)
+set(BUILD_EXAMPLES  OFF CACHE BOOL "" FORCE)
+set(BUILD_BINDINGS  OFF CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(TagLib
+    GIT_REPOSITORY https://github.com/taglib/taglib.git
+    GIT_TAG        v2.3.2
+    GIT_SHALLOW    TRUE
+    FIND_PACKAGE_ARGS 2 CONFIG
+)
+FetchContent_MakeAvailable(TagLib)
 
 qt_standard_project_setup()
 
@@ -23,6 +38,8 @@ qt_add_qml_module(backend
         src/backend/TrackFilterModel.cpp
         src/backend/MprisService.hpp
         src/backend/MprisService.cpp
+        src/backend/TagReader.hpp
+        src/backend/TagReader.cpp
 )
 target_include_directories(backend PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/backend
