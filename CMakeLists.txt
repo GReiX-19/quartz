@@ -21,6 +21,12 @@ FetchContent_Declare(TagLib
     GIT_SHALLOW    TRUE
 )
 FetchContent_MakeAvailable(TagLib)
+if(TARGET tag)
+    target_include_directories(tag SYSTEM INTERFACE
+        $<BUILD_INTERFACE:${taglib_SOURCE_DIR}/taglib>
+        $<BUILD_INTERFACE:${taglib_SOURCE_DIR}/taglib/toolkit>
+        $<BUILD_INTERFACE:${taglib_BINARY_DIR}>)
+endif()
 
 qt_standard_project_setup()
 
@@ -43,11 +49,14 @@ qt_add_qml_module(backend
 target_include_directories(backend PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/backend
 )
-target_link_libraries(backend PUBLIC
-    Qt6::Core
-    Qt6::Qml
-    Qt6::Multimedia
-    Qt6::DBus
+target_link_libraries(backend 
+    PUBLIC
+        Qt6::Core
+        Qt6::Qml
+        Qt6::Multimedia
+        Qt6::DBus
+    PRIVATE
+        tag
 )
 
 qt_add_executable(quartz
@@ -71,3 +80,9 @@ target_link_libraries(quartz PRIVATE
 include(GNUInstallDirs)
 install(TARGETS quartz
     DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+option(QUARTZ_BUILD_TESTS "Build unit tests" ON)
+if(QUARTZ_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
