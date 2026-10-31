@@ -19,7 +19,6 @@ FetchContent_Declare(TagLib
     GIT_REPOSITORY https://github.com/taglib/taglib.git
     GIT_TAG        v2.3.2
     GIT_SHALLOW    TRUE
-    FIND_PACKAGE_ARGS 2 CONFIG
 )
 FetchContent_MakeAvailable(TagLib)
 
