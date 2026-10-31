@@ -105,6 +105,8 @@ ApplicationWindow {
     Shortcut { sequence: "S"; onActivated: root.showSearch() }
     Shortcut { sequence: "V"; onActivated: root.volumeOpen = !root.volumeOpen }
     Shortcut { sequence: "D"; onActivated: durationSlider.focus = !durationSlider.focus }
+    Shortcut { sequence: "T"; onActivated: playlist.sortMode = (playlist.sortMode === PlaylistModel.NewestFirst ?
+        PlaylistModel.NameAscending : PlaylistModel.NewestFirst) }
 
     RowLayout {
         anchors.fill: parent

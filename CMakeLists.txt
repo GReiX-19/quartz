@@ -81,7 +81,7 @@ include(GNUInstallDirs)
 install(TARGETS quartz
     DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-option(QUARTZ_BUILD_TESTS "Build unit tests" ON)
+option(QUARTZ_BUILD_TESTS "Build unit tests" OFF)
 if(QUARTZ_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)

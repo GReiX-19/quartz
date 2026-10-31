@@ -24,6 +24,9 @@ PlaylistModel::RepeatMode PlaylistModel::repeatMode() const {
 bool PlaylistModel::shuffle() const {
     return m_shuffle;
 }
+PlaylistModel::SortMode PlaylistModel::sortMode() const {
+    return m_sortMode;
+}
 
 int PlaylistModel::rowCount(const QModelIndex& _parent) const {
     return _parent.isValid() ? 0 : static_cast<int>(m_tracks.size());
@@ -74,6 +77,16 @@ void PlaylistModel::setShuffle(bool _enabled) {
     emit shuffleChanged();
 }
 
+void PlaylistModel::setSortMode(SortMode _mode) {
+    if (m_sortMode == _mode)
+        return;
+
+    m_sortMode = _mode;
+    applySort();
+
+    emit sortModeChanged();
+}
+
 void PlaylistModel::scanMusicFolder() {
     const QString musicDir = QStandardPaths::writableLocation(QStandardPaths::MusicLocation);
 
@@ -85,10 +98,13 @@ void PlaylistModel::scanMusicFolder() {
 
     while (it.hasNext()) {
         const QString path = it.next();
-        found.append({ QFileInfo(path).completeBaseName(), QUrl::fromLocalFile(path) });
+        const auto info = QFileInfo(path);
+        found.append({ info.completeBaseName(), QUrl::fromLocalFile(path), info.lastModified() });
     }
 
-    std::ranges::reverse(found);
+    std::ranges::stable_sort(found, [this](const Track& _a, const Track& _b) {
+        return before(m_sortMode, _a, _b);
+    });
 
     beginResetModel();
     m_tracks = std::move(found);
@@ -217,4 +233,67 @@ void PlaylistModel::rebuildOrder(int _first) {
         std::ranges::shuffle(m_order, rng);
         m_orderPos = -1;
     }
+}
+
+void PlaylistModel::applySort() {
+    const int n = count();
+    if (n < 2)
+        return;
+
+    QList<int> order(n);
+    std::ranges::iota(order, 0);
+    std::ranges::stable_sort(order, [this](int _a, int _b) {
+        return before(m_sortMode, m_tracks[_a], m_tracks[_b]);
+        });
+
+    QList<int> newRowOf(n);
+    for (int row = 0; row < n; ++row)
+        newRowOf[order[row]] = row;
+
+    emit layoutAboutToBeChanged();
+
+    const QModelIndexList from = persistentIndexList();
+    QModelIndexList to;
+    to.reserve(from.size());
+    for (const QModelIndex& idx : from)
+        to.append(index(newRowOf[idx.row()], idx.column()));
+
+    QList<Track> sorted;
+    sorted.reserve(n);
+    for (int row : order)
+        sorted.append(std::move(m_tracks[row]));
+    m_tracks = std::move(sorted);
+
+    changePersistentIndexList(from, to);
+
+    if (m_order.size() == n)
+        for (int& row : m_order)
+            row = newRowOf[row];
+
+    const int oldCurrent = m_currentIndex;
+    if (m_currentIndex >= 0)
+        m_currentIndex = newRowOf[m_currentIndex];
+
+    emit layoutChanged();
+    if (m_currentIndex != oldCurrent)
+        emit currentIndexChanged();
+}
+
+bool PlaylistModel::before(SortMode _mode, const Track& _a, const Track& _b) {
+    switch (_mode) {
+    case NewestFirst:
+        if (_a.modified != _b.modified)
+            return _a.modified > _b.modified;
+        break;
+    case NameAscending: {
+        const int c = _a.url.fileName().compare(_b.url.fileName(), Qt::CaseInsensitive);
+        if (c != 0)
+            return c < 0;
+        break;
+    }
+    default:
+        break;
+    }
+
+    return _a.url.toString() < _b.url.toString();
 }
